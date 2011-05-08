@@ -1,8 +1,14 @@
-# Why sleep when you can Power-Nap?
-Set-Alias Power-Nap sleep
+function Setup-Aliases {
+    Set-Alias Power-Nap sleep
+}
 
-# Thinking a simple unix alias profile would be an interesting project
-filter grep($keyword) { if ( ($_ | Out-String) -like "*$keyword*") { $_ } }
+function Setup-Filters {
+    filter grep($keyword) { if ( ($_ | Out-String) -like "*$keyword*") { $_ } }
+}
+
+function Setup-PowerShellAppPath {
+    $env:Path = "$($env:Path);$($env:UserProfile)\poshfiles\apps"
+}
 
 # prompt customization coming from the following:
 # http://winterdom.com/2008/08/mypowershellprompt
@@ -28,3 +34,7 @@ function prompt {
    write-host '}' -n -f $cdelim 
    return ' ' 
 }
+
+Setup-Aliases
+Setup-Filters
+Setup-PowerShellAppPath
