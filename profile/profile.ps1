@@ -1,11 +1,3 @@
-function Setup-Aliases {
-    Set-Alias Power-Nap sleep
-}
-
-function Setup-Filters {
-    filter grep($keyword) { if ( ($_ | Out-String) -like "*$keyword*") { $_ } }
-}
-
 function Setup-PowerShellAppPath {
     $env:Path = "$($env:Path);$($env:UserProfile)\poshfiles\apps"
 }
@@ -21,6 +13,7 @@ function shorten-path([string] $path) {
    return ($loc -replace '\\(\.?)([^\\])[^\\]*(?=\\)','\$1$2') 
 }
 
+# This is function is called by convention in PowerShell
 function prompt { 
    # our theme 
    $cdelim = [ConsoleColor]::DarkCyan 
@@ -35,6 +28,16 @@ function prompt {
    return ' ' 
 }
 
+function Edit-Hosts {
+    Start-Process -FilePath notepad -ArgumentList "$env:windir\system32\drivers\etc\hosts"
+}
+
+function Import-InstalledModules {
+    Get-Module -ListAvailable | ? { $_.ModuleType -eq "Script" } | Import-Module
+}
+
 Setup-Aliases
 Setup-Filters
 Setup-PowerShellAppPath
+Import-InstalledModules
+
