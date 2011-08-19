@@ -1,7 +1,3 @@
-function Setup-PowerShellAppPath {
-    $env:Path = "$($env:Path);$($env:UserProfile)\poshfiles\apps"
-}
-
 # prompt customization coming from the following:
 # http://winterdom.com/2008/08/mypowershellprompt
 function shorten-path([string] $path) { 
@@ -28,16 +24,15 @@ function prompt {
    return ' ' 
 }
 
-function Edit-Hosts {
-    Start-Process -FilePath notepad -ArgumentList "$env:windir\system32\drivers\etc\hosts"
+function Setup-Path {
+    $paths = @("$($env:Path)", "$($env:UserProfile)\poshfiles\scripts")
+    gci $env:UserProfile\bin | % { $paths += $_.FullName }
+    $env:Path = [String]::Join(";", $paths) 
 }
 
 function Import-InstalledModules {
     Get-Module -ListAvailable | ? { $_.ModuleType -eq "Script" } | Import-Module
 }
 
-Setup-Aliases
-Setup-Filters
-Setup-PowerShellAppPath
+Setup-Path
 Import-InstalledModules
-
