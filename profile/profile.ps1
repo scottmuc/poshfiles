@@ -21,7 +21,11 @@ function prompt {
    write-host ' {' -n -f $cdelim 
    write-host (shorten-path (pwd).Path) -n -f $cloc 
    write-host '}' -n -f $cdelim 
-   return ' ' 
+   
+   $global:GitStatus = Get-GitStatus
+   Write-GitStatus $GitStatus
+   
+   return '> '
 }
 
 function Setup-Path {
@@ -36,3 +40,5 @@ function Import-InstalledModules {
 
 Setup-Path
 Import-InstalledModules
+
+Enable-GitColors
