@@ -65,3 +65,4 @@ Setup-Path
 Import-InstalledModules
 
 Enable-GitColors
+
