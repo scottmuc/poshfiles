@@ -4,65 +4,33 @@
 #
 ###########################################################
 
-# prompt customization coming from the following:
-# http://winterdom.com/2008/08/mypowershellprompt
-function shorten-path([string] $path) { 
-   $loc = $path.Replace($HOME, '~') 
-   # remove prefix for UNC paths 
-   $loc = $loc -replace '^[^:]+::', '' 
-   # make path shorter like tabs in Vim, 
-   # handle paths starting with \\ and . correctly 
-   return ($loc -replace '\\(\.?)([^\\])[^\\]*(?=\\)','\$1$2') 
-}
+# ahh yes... this would be so nice if it was a built in variable
+$here = Split-Path -Parent $MyInvocation.MyCommand.Path
 
-# This is function is called by convention in PowerShell
-function prompt { 
-   # our theme 
-   $cdelim = [ConsoleColor]::DarkCyan 
-   $chost = [ConsoleColor]::Green 
-   $cloc = [ConsoleColor]::Cyan 
+# load all script modules available to us
+Get-Module -ListAvailable | ? { $_.ModuleType -eq "Script" } | Import-Module
 
-   write-host "$([char]0x0A7) " -n -f $cloc 
-   write-host ([net.dns]::GetHostName()) -n -f $chost 
-   write-host ' {' -n -f $cdelim 
-   write-host (shorten-path (pwd).Path) -n -f $cloc 
-   write-host '}' -n -f $cdelim 
+# function loader
+#
+# if you want to add functions you can added scripts to your
+# powershell profile functions directory or you can inline them
+# in this file. Ignoring the dot source of any tests
+Resolve-Path $here\functions\*.ps1 | 
+? { -not ($_.ProviderPath.Contains(".Tests.")) } |
+% { . $_.ProviderPath }
 
-   $global:GitStatus = Get-GitStatus
-   Write-GitStatus $GitStatus
+# inline functions, aliases and variables
+function which($name) { Get-Command $name | Select-Object Definition }
+function rm-rf($item) { Remove-Item $item -Recurse -Force }
+function touch($file) { "" | Out-File $file -Encoding ASCII }
+Set-Alias g gvim
+$TransientScriptDir = "$here\scripts"
+$UserBinDir = "$($env:UserProfile)\bin"
 
-   return '> '
-}
-
-Set-Alias which Get-Command
-
-function Setup-Path {
-    $paths = @("$($env:Path)", "$($env:UserProfile)\poshfiles\scripts")
-    gci $env:UserProfile\bin | % { $paths += $_.FullName }
-    $env:Path = [String]::Join(";", $paths) 
-}
-
-function Import-InstalledModules {
-    Get-Module -ListAvailable | ? { $_.ModuleType -eq "Script" } | Import-Module
-}
-
-function Nuke-Item($item) { Remove-Item $item -Recurse -Force }
-
-function Edit-HostsFiles {
-    Start-Process -FilePath notepad -ArgumentList "$env:windir\system32\drivers\etc\hosts"
-}
-
-# found at http://www.gregorystrike.com/2011/01/27/how-to-tell-if-powershell-is-32-bit-or-64-bit/
-Function Get-Bits {
-    Switch ([System.Runtime.InterOpServices.Marshal]::SizeOf([System.IntPtr])) {
-        4 { Return "32-bit" }
-        8 { Return "64-bit" }
-        default { Return "Unknown Type" }
-    }
-}
-
-Setup-Path
-Import-InstalledModules
-
-Enable-GitColors
-
+# PATH update
+#
+# creates paths to every subdirectory of userprofile\bin
+# adds a transient script dir that I use for experiments
+$paths = @("$($env:Path)", $TransientScriptDir)
+gci $UserBinDir | % { $paths += $_.FullName }
+$env:Path = [String]::Join(";", $paths) 
